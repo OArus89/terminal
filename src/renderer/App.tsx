@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Terminal } from './components/Terminal';
 
 export function App() {
   const [version, setVersion] = useState<string>('');
@@ -8,11 +9,12 @@ export function App() {
   }, []);
 
   return (
-    <main className="app">
-      <h1>Console</h1>
-      <p className="muted">
-        Skeleton ready. App version: <code>{version || 'loading…'}</code>
-      </p>
-    </main>
+    <div className="app">
+      <Terminal />
+      <footer className="status-bar">
+        <span>Console</span>
+        <span className="muted">v{version || '…'}</span>
+      </footer>
+    </div>
   );
 }
