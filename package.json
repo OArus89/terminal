@@ -43,6 +43,7 @@
     "vitest": "^4.1.5"
   },
   "dependencies": {
+    "@automerge/automerge": "^3.2.6",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-web-links": "^0.12.0",
     "@xterm/xterm": "^6.0.0",
