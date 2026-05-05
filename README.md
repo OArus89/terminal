@@ -58,6 +58,35 @@ Mapping operations to CRDT primitives:
 
 In Drive, each device writes its own append-only operations log under an encrypted file name. On sync, the app downloads all logs, merges the CRDT state locally, and **never overwrites** other devices' files. Periodic compaction folds logs into snapshots.
 
+### Encryption: **hybrid scheme (X25519 + XChaCha20-Poly1305 + Argon2id)**
+
+Same family as Termius / 1Password / Bitwarden:
+
+```
+master password → Argon2id → KEK (key-encryption key)
+keypair (X25519): private encrypted with KEK, public is open
+DEK (data key) — random, encrypted with the public key
+DEK symmetrically encrypts the vault (XChaCha20-Poly1305)
+```
+
+| Layer | Algorithm |
+|---|---|
+| KDF | **Argon2id**, memory ≥ 256 MB, t=3, p=1 |
+| Symmetric | **XChaCha20-Poly1305** (libsodium `crypto_secretbox`) |
+| Asymmetric | **X25519** + `crypto_box` (libsodium) |
+| Hash | **BLAKE2b** |
+
+Advantage over symmetric-only: a password change re-encrypts only the private key (~32 bytes), not the entire vault. The DEK can be rotated independently of the password.
+
+**Drive-specific hardening:**
+
+1. **Anti-rollback.** Every blob carries a monotonic `vault_version`; the local copy of the counter lives in OS secure storage. If Drive returns a version lower than the last known one → never accept silently.
+2. **AEAD over the entire file, including the header.** No plaintext fields anywhere.
+3. **No metadata leakage.** File names in Drive are hashes (BLAKE2b of the vault id), no user-friendly strings.
+4. **AAD = vault_id + version + chunk_index** — an attacker cannot swap one valid blob for another.
+5. **Google OAuth token** lives in OS secure storage, never in a plain app file.
+6. **Local KEK cache** sits behind biometrics with a configurable TTL; the master password is never cached.
+
 ---
 
 ## Scope
@@ -97,40 +126,11 @@ In Drive, each device writes its own append-only operations log under an encrypt
 
 ---
 
-## Open questions
+## Open implementation questions
 
-### Encryption scheme (recommendation pending confirmation)
+### CRDT × encryption granularity
 
-Hybrid scheme (same family as Termius / 1Password / Bitwarden):
-
-```
-master password → Argon2id → KEK (key-encryption key)
-keypair (X25519): private encrypted with KEK, public is open
-DEK (data key) — random, encrypted with the public key
-DEK symmetrically encrypts the vault (XChaCha20-Poly1305)
-```
-
-| Layer | Algorithm |
-|---|---|
-| KDF | **Argon2id**, memory ≥ 256 MB, t=3, p=1 |
-| Symmetric | **XChaCha20-Poly1305** (libsodium `crypto_secretbox`) |
-| Asymmetric | **X25519** + `crypto_box` (libsodium) |
-| Hash | **BLAKE2b** |
-
-Advantage over symmetric-only: changing the password re-encrypts only the private key (~32 bytes), not the entire vault. The DEK can be rotated independently of the password.
-
-### Drive-specific hardening
-
-1. **Anti-rollback.** Every blob carries a monotonic `vault_version`; the local copy of the counter lives in OS secure storage. If Drive returns a version lower than the last known one → never accept silently.
-2. **AEAD over the entire file, including the header.** No plaintext fields anywhere.
-3. **No metadata leakage.** File names in Drive are hashes (BLAKE2b of the vault id), no user-friendly strings.
-4. **AAD = vault_id + version + chunk_index** — an attacker cannot swap one valid blob for another.
-5. **Google OAuth token** lives in OS secure storage, never in a plain app file.
-6. **Local KEK cache** sits behind biometrics with a configurable TTL; the master password is never cached.
-
-### CRDT × encryption
-
-Open design question: encrypt the CRDT as a whole snapshot, or encrypt each operation individually (op-level encryption). MVP will likely combine both: ops are encrypted one by one (cheap append into Drive), with periodic encrypted snapshots replacing logs on compaction.
+Encrypt the CRDT as a whole snapshot, or encrypt each operation individually (op-level encryption). MVP will likely combine both: ops are encrypted one by one (cheap append into Drive), with periodic encrypted snapshots replacing logs on compaction. Final shape will be settled when the sync protocol is prototyped.
 
 ---
 
