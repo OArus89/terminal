@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      '@core': '/src/core',
       '@shared': '/src/shared',
       '@renderer': '/src/renderer',
     },

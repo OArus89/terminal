@@ -1,11 +1,19 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
-import type { PtyCreateOptions, PtyDataEvent, PtyExitEvent } from '../shared/ipc';
+import type {
+  PtyCreateOptions,
+  PtyDataEvent,
+  PtyExitEvent,
+  Host,
+  HostId,
+  AddHostInput,
+} from '../shared/ipc';
 
 // Surface only an explicit, narrow API to the renderer. Anything that touches
 // keys, the vault, or Drive must go through main-process IPC handlers — never
 // expose `ipcRenderer` or Node modules directly.
 const electronAPI = {
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version'),
+
   pty: {
     create: (opts: PtyCreateOptions): Promise<string> => ipcRenderer.invoke('pty:create', opts),
     write: (sessionId: string, data: string): void => {
@@ -29,6 +37,19 @@ const electronAPI = {
       ipcRenderer.on('pty:exit', wrapped);
       return () => {
         ipcRenderer.removeListener('pty:exit', wrapped);
+      };
+    },
+  },
+
+  vault: {
+    listHosts: (): Promise<Host[]> => ipcRenderer.invoke('vault:list-hosts'),
+    addHost: (input: AddHostInput): Promise<HostId> => ipcRenderer.invoke('vault:add-host', input),
+    deleteHost: (id: HostId): Promise<void> => ipcRenderer.invoke('vault:delete-host', id),
+    onChange: (listener: () => void): (() => void) => {
+      const wrapped = () => listener();
+      ipcRenderer.on('vault:changed', wrapped);
+      return () => {
+        ipcRenderer.removeListener('vault:changed', wrapped);
       };
     },
   },

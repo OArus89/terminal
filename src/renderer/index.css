@@ -24,10 +24,215 @@ body,
   color: #e6edf3;
 }
 
+button {
+  font-family: inherit;
+}
+
 .app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    'sidebar main'
+    'status status';
+  height: 100vh;
+}
+
+/* ---- Sidebar ---- */
+
+.sidebar {
+  grid-area: sidebar;
+  background: #161b22;
+  border-right: 1px solid #30363d;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #30363d;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b949e;
+}
+
+.add-button {
+  background: transparent;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-button:hover {
+  background: #21262d;
+}
+
+.host-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.host {
+  position: relative;
+  padding: 8px 30px 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+.host:hover {
+  background: #21262d;
+}
+
+.host.selected {
+  background: #1f6feb33;
+  outline: 1px solid #1f6feb55;
+}
+
+.host-label {
+  font-size: 13px;
+  color: #e6edf3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.host-meta {
+  font-size: 11px;
+  color: #8b949e;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.host-delete {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: none;
+}
+
+.host:hover .host-delete,
+.host.selected .host-delete {
+  display: block;
+}
+
+.host-delete:hover {
+  color: #ff7b72;
+  background: #21262d;
+}
+
+.empty {
+  padding: 16px 12px;
+  color: #8b949e;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ---- Add form ---- */
+
+.host-form {
+  padding: 10px;
+  border-top: 1px solid #30363d;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #0d1117;
+}
+
+.host-form input {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #e6edf3;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.host-form input:focus {
+  outline: none;
+  border-color: #1f6feb;
+}
+
+.host-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.host-form button {
+  padding: 5px 12px;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #e6edf3;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.host-form button[type='submit'] {
+  background: #238636;
+  border-color: #238636;
+}
+
+.host-form button:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.host-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Main / terminal ---- */
+
+.main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.terminal-header {
+  padding: 8px 14px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  font-size: 12px;
+  color: #e6edf3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .terminal-container {
@@ -42,7 +247,10 @@ body,
   background: transparent !important;
 }
 
+/* ---- Status bar ---- */
+
 .status-bar {
+  grid-area: status;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -56,4 +264,11 @@ body,
 
 .muted {
   color: #8b949e;
+}
+
+code {
+  background: #161b22;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Cascadia Mono', monospace;
 }

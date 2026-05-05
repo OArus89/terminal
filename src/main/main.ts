@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, session } from 'electron';
 import path from 'node:path';
 import { PtyManager } from './pty';
+import { initVaultIpc } from './vault-ipc';
 import type { PtyCreateOptions } from '../shared/ipc';
 
 // Injected by @electron-forge/plugin-vite at build time.
@@ -82,6 +83,7 @@ const wirePtyIpc = (): void => {
 app.whenReady().then(() => {
   installCsp();
   wirePtyIpc();
+  initVaultIpc();
   ipcMain.handle('app:get-version', () => app.getVersion());
   createWindow();
 
